@@ -2,6 +2,8 @@ import { Outlet, Route, Routes } from 'react-router';
 import BaseLayout from './views/BaseLayout';
 import Home from './views/Home';
 import AvailableCats from './views/AvailableCats';
+import './index.css'; 
+
 
 function App() {
   return (

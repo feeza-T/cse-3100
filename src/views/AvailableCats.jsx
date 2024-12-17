@@ -1,28 +1,34 @@
 import { useEffect, useState } from 'react';
 
 const availableCats = [
-  { name: 'Whiskers', age: '2' },
-  { name: 'Mittens', age: '2' },
-  { name: 'Shadow', age: '1' },
-  { name: 'Pumpkin', age: '3' },
-  { name: 'Luna', age: '4' },
-  { name: 'Simba', age: '2' },
+  { name: 'Whiskers', age: '2', breed: 'Sphynx' },
+  { name: 'Mittens', age: '2', breed: 'Bengal' },
+  { name: 'Shadow', age: '1', breed: 'Persian' },
+  { name: 'Pumpkin', age: '3', breed: 'Maine Coon' },
+  { name: 'Luna', age: '4', breed: 'Siamese' },
+  { name: 'Simba', age: '2', breed: 'Bengal' },
 ];
 
 export default function AvailableCats() {
   const [cats, setCats] = useState([]);
-
+  const [filteredCats, setFilteredCats] = useState([]);
+  const [breedFilter, setBreedFilter] = useState('All'); 
+  const [nameFilter, setNameFilter] = useState(''); 
   useEffect(() => {
-    // Fetch cat images from an API endpoint and assign it to the featuredCats list
     const fetchCatImages = async () => {
       try {
-        const responses = await Promise.all(availableCats.map(() => fetch('https://api.thecatapi.com/v1/images/search').then((res) => res.json())));
+        const responses = await Promise.all(
+          availableCats.map(() =>
+            fetch('https://api.thecatapi.com/v1/images/search').then((res) => res.json())
+          )
+        );
         const catsWithImages = availableCats.map((cat, index) => ({
           ...cat,
           image: responses[index][0].url,
         }));
 
         setCats(catsWithImages);
+        setFilteredCats(catsWithImages);
       } catch (error) {
         console.error('Error fetching cat images:', error);
       }
@@ -31,24 +37,91 @@ export default function AvailableCats() {
     fetchCatImages();
   }, []);
 
+  useEffect(() => {
+    let updatedCats = cats;
+
+    if (breedFilter !== 'All') {
+      updatedCats = updatedCats.filter((cat) => cat.breed === breedFilter);
+    }
+
+    if (nameFilter) {
+      updatedCats = updatedCats.filter((cat) =>
+        cat.name.toLowerCase().includes(nameFilter.toLowerCase())
+      );
+    }
+
+    setFilteredCats(updatedCats);
+  }, [breedFilter, nameFilter, cats]);
+
+  const uniqueBreeds = ['All', ...new Set(availableCats.map((cat) => cat.breed))];
+
   return (
     <section className="text-center mt-4">
       <h2>Available Cats</h2>
       <p>Meet our adorable cats looking for their forever home!</p>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+       <div>
+         <h3>Available Cats</h3>
+       </div>
+  <div className="d-flex">
+    <input
+      type="text"
+      placeholder="Search by name..."
+      className="form-control me-2"
+      value={nameFilter}
+      onChange={(e) => setNameFilter(e.target.value)}
+    />
+    <select
+      className="form-select"
+      value={breedFilter}
+      onChange={(e) => setBreedFilter(e.target.value)}
+    >
+      {uniqueBreeds.map((breed, index) => (
+        <option key={index} value={breed}>
+          {breed}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
 
-      <div className="mt-2 row g-4 cats-container" id="cats-container">
-        {cats.map((cat, i) => (
+      {/* Cats Display */}
+      <div className="row g-4" id="cats-container">
+        {filteredCats.map((cat, i) => (
           <div key={i} className="col-md-4">
-            <div className="cat-card">
-              <img src={cat.image} alt={cat.name} className="img-fluid mb-2" style={{ borderRadius: '8px', height: '200px', objectFit: 'cover' }} />
-              <div className="cat-info">
-                <h3 className="h5 mb-1">{cat.name}</h3>
-                <p className="mb-0">Age: {cat.age}</p>
+            <div
+              className="card shadow-sm"
+              style={{
+                borderRadius: '8px',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Image */}
+              <img
+                src={cat.image}
+                alt={cat.name}
+                className="card-img-top"
+                style={{
+                  height: '200px',
+                  objectFit: 'cover',
+                }}
+              />
+
+              {/* Card Body */}
+              <div className="card-body">
+                <h5 className="card-title">Name: {cat.name}</h5>
+                <p className="card-text mb-1">Age: {cat.age}</p>
+                <p className="card-text mb-0">Breed: {cat.breed}</p>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* If No Cats Found */}
+      {filteredCats.length === 0 && (
+        <p className="mt-4 text-muted text-bold">No cats match your search criteria.</p>
+      )}
     </section>
   );
 }
