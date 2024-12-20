@@ -11,47 +11,54 @@ const availableCats = [
 
 export default function AvailableCats() {
   const [cats, setCats] = useState([]);
-  const [filteredCats, setFilteredCats] = useState([]);
+  const [filteredCats, setFilteredCats] = useState([]); 
   const [breedFilter, setBreedFilter] = useState('All'); 
-  const [nameFilter, setNameFilter] = useState(''); 
+  const [nameFilter, setNameFilter] = useState(''); // State for the search input
+
   useEffect(() => {
     const fetchCatImages = async () => {
       try {
+        // Fetch random cat images from the API for each cat
         const responses = await Promise.all(
           availableCats.map(() =>
             fetch('https://api.thecatapi.com/v1/images/search').then((res) => res.json())
           )
         );
+
+        // Combine cat data with fetched images
         const catsWithImages = availableCats.map((cat, index) => ({
           ...cat,
           image: responses[index][0].url,
         }));
 
-        setCats(catsWithImages);
-        setFilteredCats(catsWithImages);
+        setCats(catsWithImages); // Update the full cats state
+        setFilteredCats(catsWithImages); // Initialize the filtered cats state with the full list
       } catch (error) {
         console.error('Error fetching cat images:', error);
       }
     };
 
-    fetchCatImages();
+    fetchCatImages(); 
   }, []);
 
   useEffect(() => {
     let updatedCats = cats;
 
+    // Filter by breed 
     if (breedFilter !== 'All') {
       updatedCats = updatedCats.filter((cat) => cat.breed === breedFilter);
     }
 
+    // Filter by name
     if (nameFilter) {
       updatedCats = updatedCats.filter((cat) =>
         cat.name.toLowerCase().includes(nameFilter.toLowerCase())
       );
     }
 
+    // Update the filtered cats state
     setFilteredCats(updatedCats);
-  }, [breedFilter, nameFilter, cats]);
+  }, [breedFilter, nameFilter, cats]); 
 
   const uniqueBreeds = ['All', ...new Set(availableCats.map((cat) => cat.breed))];
 
@@ -59,31 +66,35 @@ export default function AvailableCats() {
     <section className="text-center mt-4">
       <h2>Available Cats</h2>
       <p>Meet our adorable cats looking for their forever home!</p>
+      
+      {/* Search and Filter */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-       <div>
-         <h3>Available Cats</h3>
-       </div>
-  <div className="d-flex">
-    <input
-      type="text"
-      placeholder="Search by name..."
-      className="form-control me-2"
-      value={nameFilter}
-      onChange={(e) => setNameFilter(e.target.value)}
-    />
-    <select
-      className="form-select"
-      value={breedFilter}
-      onChange={(e) => setBreedFilter(e.target.value)}
-    >
-      {uniqueBreeds.map((breed, index) => (
-        <option key={index} value={breed}>
-          {breed}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
+        <div>
+          <h3>Available Cats</h3>
+        </div>
+        <div className="d-flex">
+          {/* Input field for searching cats by name */}
+          <input
+            type="text"
+            placeholder="Search by name..."
+            className="form-control me-2"
+            value={nameFilter} 
+            onChange={(e) => setNameFilter(e.target.value)} 
+          />
+          {/* Dropdown for selecting breed filter */}
+          <select
+            className="form-select"
+            value={breedFilter}
+            onChange={(e) => setBreedFilter(e.target.value)}
+          >
+            {uniqueBreeds.map((breed, index) => (
+              <option key={index} value={breed}>
+                {breed}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Cats Display */}
       <div className="row g-4" id="cats-container">
